@@ -1,3 +1,5 @@
+**中文** | [English](README-EN.md)
+
 # Lesta Game Center汉化
 
 ## 下载
