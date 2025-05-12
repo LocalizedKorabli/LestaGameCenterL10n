@@ -26,6 +26,16 @@
 部分文本存储在具体游戏的`game_metadata`中，我们正在联系相关游戏的汉化组处理这类文本的汉化。
 
 ## 鸣谢
-
-- 本地化：[澪刻本地化](https://github.com/LocalizedKorabli)
-- 逆向工程：[Windofxy-风男](https://github.com/windofxy)，[澪刻本地化](https://github.com/LocalizedKorabli)
+### 逆向工程
+- [Windofxy-风男](https://github.com/windofxy)
+- [澪刻本地化](https://github.com/LocalizedKorabli)
+### 本地化
+#### 简体中文
+- [澪刻本地化](https://github.com/LocalizedKorabli)
+- [Windofxy-风男](https://github.com/windofxy)
+#### 英语
+- [澪刻本地化](https://github.com/LocalizedKorabli)
+#### 波兰语
+- [Karo2O](https://github.com/Karo2O)
+#### 德语
+- [Schweizerli](https://github.com/Schweizerli)
