@@ -39,3 +39,5 @@
 - [Karo2O](https://github.com/Karo2O)
 #### 德语
 - [Schweizerli](https://github.com/Schweizerli)
+#### 韩语
+- [Kim7obu](https://github.com/Kim7obu)

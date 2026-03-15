@@ -33,6 +33,8 @@ After Lesta Game Center updates, it may take a while for us to sort out the new 
 - [Schweizerli](https://github.com/Schweizerli)
 #### English
 - [LocalizedKorabli](https://github.com/LocalizedKorabli)
+#### Korean
+- [Kim7obu](https://github.com/Kim7obu)
 #### Polski
 - [Karo2O](https://github.com/Karo2O)
 #### 简体中文
