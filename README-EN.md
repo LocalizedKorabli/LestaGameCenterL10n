@@ -19,7 +19,7 @@
 ## Q&A
 
 ### Why is it in Russian again?
-Lesta Game Center itself updated the "lgc_res.dat" file. Reinstall the translation pack again.
+Lesta Game Center itself updated the "lgc_res.dat" file. Download and install the latest translation pack.
 
 ### Some texts missing or not translated?
 After Lesta Game Center updates, it may take a while for us to sort out the new text and release the new translation, so please keep an eye on the release page.
