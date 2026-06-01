@@ -40,7 +40,7 @@ if (-not $lgcVersion -or -not $supportedLgcVersion) {
     exit 1
 }
 
-$tagName = "${supportedLgcVersion}-${lgcVersion}"
+$tagName = "LGC-${supportedLgcVersion}-${lgcVersion}"
 
 Write-Host "[INFO] Version: $lgcVersion" -ForegroundColor Cyan
 Write-Host "[INFO] Supported LGC: $supportedLgcVersion" -ForegroundColor Cyan
