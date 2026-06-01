@@ -1,0 +1,43 @@
+{
+    "path": "https://dl.localizedkorabli.org/lateral/lgc/lgc_l10n.7z",
+    "version": "26.6.2",
+    "supported_lgc_version": "26.00.02.1046",
+    "supported_languages": [
+        {
+            "id": "zh_cn",
+            "name": "简体中文"
+        },
+        {
+            "id": "zh_tw",
+            "name": "繁體中文"
+        },
+        {
+            "id": "en",
+            "name": "English"
+        },
+        {
+            "id": "pl",
+            "name": "Polski"
+        },
+        {
+            "id": "de",
+            "name": "Deutsch"
+        },
+        {
+            "id": "ja",
+            "name": "日本語"
+        },
+        {
+            "id": "ko",
+            "name": "한국어"
+        },
+        {
+            "id": "ru",
+            "name": "Русский"
+        },
+        {
+            "id": "be",
+            "name": "Беларуская"
+        }
+    ]
+}
