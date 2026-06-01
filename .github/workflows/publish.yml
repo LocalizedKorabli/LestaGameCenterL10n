@@ -1,4 +1,4 @@
-name: Publish Release to R2 & Update Metadata
+name: Publish L10n Release to R2
 
 on:
   release:
@@ -17,21 +17,19 @@ jobs:
         with:
           ref: main
 
-      - name: Download NSIS installer from Release
+      - name: Download lgc_l10n.7z from Release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release download "${{ github.ref_name }}" \
-            --pattern "*_x64-setup.exe" \
+            --pattern "lgc_l10n.7z" \
             --dir .
 
-          FILE_NAME=$(ls *_x64-setup.exe | head -1)
-          if [ -z "$FILE_NAME" ]; then
-            echo "::error::No NSIS installer found in release assets"
+          if [ ! -f "lgc_l10n.7z" ]; then
+            echo "::error::lgc_l10n.7z not found in release assets"
             exit 1
           fi
-          echo "FILE_NAME=$FILE_NAME" >> $GITHUB_ENV
 
       - name: Upload to R2
         shell: bash
@@ -40,30 +38,9 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_KEY }}
           AWS_DEFAULT_REGION: auto
         run: |
-          aws s3 cp "$FILE_NAME" \
-            "s3://${{ secrets.R2_BUCKET }}/lateral/app/$FILE_NAME" \
+          aws s3 cp "lgc_l10n.7z" \
+            "s3://${{ secrets.R2_BUCKET }}/lateral/lgc/lgc_l10n.7z" \
             --endpoint-url "${{ secrets.R2_ENDPOINT }}"
-
-      - name: Generate metadata.json
-        shell: bash
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          jq -n \
-            --arg path "${{ secrets.R2_PUBLIC_URL }}/lateral/app/$FILE_NAME" \
-            --arg version "$VERSION" \
-            '{path: $path, version: $version}' > metadata.json
-          cat metadata.json
-
-      - name: Commit & push metadata.json
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add metadata.json
-          git diff --cached --quiet || {
-            git commit -m "chore: update metadata.json to ${GITHUB_REF_NAME} [skip ci]"
-            git push origin HEAD:main
-          }
 
       - name: Trigger Cloudflare Pages Deploy Hook
         run: curl -X POST -s "${{ secrets.CF_PAGES_DEPLOY_HOOK }}"
