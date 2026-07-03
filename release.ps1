@@ -18,6 +18,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# ─── 0. Define Base Paths (Fix for running from anywhere) ────────
+# $PSScriptRoot 代表脚本文件所在的目录
+$baseDir = $PSScriptRoot 
+
 # ─── 1. Check gh CLI ─────────────────────────────────────────────
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Write-Host "[ERROR] GitHub CLI (gh) not found. Install: winget install GitHub.cli" -ForegroundColor Red
@@ -25,9 +29,10 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
 }
 
 # ─── 2. Read metadata/l10n.json ──────────────────────────────────
-$metaPath = "metadata/l10n.json"
+# 将相对路径改为绝对路径
+$metaPath = Join-Path $baseDir "metadata/l10n.json"
 if (-not (Test-Path $metaPath)) {
-    Write-Host "[ERROR] Run this script from the project root directory" -ForegroundColor Red
+    Write-Host "[ERROR] Cannot find metadata file at: $metaPath" -ForegroundColor Red
     exit 1
 }
 
@@ -46,10 +51,10 @@ Write-Host "[INFO] Version: $lgcVersion" -ForegroundColor Cyan
 Write-Host "[INFO] Supported LGC: $supportedLgcVersion" -ForegroundColor Cyan
 
 # ─── 3. Check for 7z file ───────────────────────────────────────
-$archivePath = "artifacts/lgc_l10n.7z"
+# 将相对路径改为绝对路径
+$archivePath = Join-Path $baseDir "artifacts/lgc_l10n.7z"
 if (-not (Test-Path $archivePath)) {
     Write-Host "[ERROR] Archive not found at: $archivePath" -ForegroundColor Red
-    Write-Host "    Make sure the 7z file exists in the artifacts directory" -ForegroundColor Yellow
     exit 1
 }
 
@@ -57,41 +62,82 @@ $fileSize = (Get-Item $archivePath).Length
 $sizeStr = if ($fileSize -gt 1GB) { "{0:N2} GB" -f ($fileSize / 1GB) } else { "{0:N2} MB" -f ($fileSize / 1MB) }
 Write-Host "[INFO] Archive: lgc_l10n.7z ($sizeStr)" -ForegroundColor Green
 
-# ─── 4. Delete existing tag if present ───────────────────────────
-$tagExists = git tag -l "$tagName" | Select-String -SimpleMatch "$tagName" -Quiet
-if ($tagExists) {
-    Write-Host "[WARN] Tag '$tagName' exists, deleting ..." -ForegroundColor Yellow
-    git tag -d "$tagName"
-    git push origin --delete "$tagName" 2>$null
+# ─── 3.5 Auto Commit & Push Changes ─────────────────────────────
+Write-Host "[INFO] Checking for uncommitted changes ..." -ForegroundColor Cyan
+
+# 临时切换到仓库目录以执行 git 命令
+$currentDir = Get-Location
+Set-Location $baseDir
+
+try {
+    # 检查是否有文件改动（包括未追踪的文件）
+    $hasChanges = git status --porcelain
+    if ($hasChanges) {
+        Write-Host "[WARN] Found uncommitted changes. Committing and pushing..." -ForegroundColor Yellow
+        git add .
+        git commit -m "chore: bump version to $tagName [skip ci]"
+        
+        Write-Host "[INFO] Pushing commits to remote repository..." -ForegroundColor Cyan
+        git push origin (git branch --show-current)
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[ERROR] Failed to push commits to remote" -ForegroundColor Red
+            exit 1
+        }
+    } else {
+        Write-Host "[INFO] No changes to commit." -ForegroundColor Green
+    }
+}
+finally {
+    Set-Location $currentDir
 }
 
-# ─── 5. Create GitHub Release ────────────────────────────────────
-Write-Host "[INFO] Creating GitHub Release $tagName ..." -ForegroundColor Cyan
+# ─── 4. Delete existing tag if present ───────────────────────────
+# 注意：git 命令依赖于当前工作目录。
+# 为了确保 git 在正确的仓库中运行，我们需要先临时切换到脚本所在目录，执行完后再切回来。
+$currentDir = Get-Location
+Set-Location $baseDir
 
-$ghArgs = @(
-    "release", "create", $tagName,
-    $archivePath,
-    "--title", $tagName
-)
+try {
+    $tagExists = git tag -l "$tagName" | Select-String -SimpleMatch "$tagName" -Quiet
+    if ($tagExists) {
+        Write-Host "[WARN] Tag '$tagName' exists, deleting ..." -ForegroundColor Yellow
+        git tag -d "$tagName"
+        git push origin --delete "$tagName" 2>$null
+    }
 
-if ($Draft) {
-    $ghArgs += "--draft"
-} elseif ($NotesFile) {
-    if (-not (Test-Path $NotesFile)) {
-        Write-Host "[ERROR] Notes file not found: $NotesFile" -ForegroundColor Red
+    # ─── 5. Create GitHub Release ────────────────────────────────────
+    Write-Host "[INFO] Creating GitHub Release $tagName ..." -ForegroundColor Cyan
+
+    $ghArgs = @(
+        "release", "create", $tagName,
+        $archivePath,
+        "--title", $tagName
+    )
+
+    if ($Draft) {
+        $ghArgs += "--draft"
+    } elseif ($NotesFile) {
+        # 如果用户传了 NotesFile，通常是相对于用户当前执行命令的目录，所以这里不做 $baseDir 拼接
+        if (-not (Test-Path $NotesFile)) {
+            Write-Host "[ERROR] Notes file not found: $NotesFile" -ForegroundColor Red
+            exit 1
+        }
+        $ghArgs += "--notes-file", $NotesFile
+    } elseif ([string]::IsNullOrEmpty($Notes)) {
+        $ghArgs += "--generate-notes"
+    } else {
+        $ghArgs += "--notes", $Notes
+    }
+
+    $result = & gh $ghArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[ERROR] Failed to create Release: $result" -ForegroundColor Red
         exit 1
     }
-    $ghArgs += "--notes-file", $NotesFile
-} elseif ([string]::IsNullOrEmpty($Notes)) {
-    $ghArgs += "--generate-notes"
-} else {
-    $ghArgs += "--notes", $Notes
 }
-
-$result = & gh $ghArgs 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[ERROR] Failed to create Release: $result" -ForegroundColor Red
-    exit 1
+finally {
+    # 无论成功或失败，都把工作目录切回用户原本的目录
+    Set-Location $currentDir
 }
 
 Write-Host ""
