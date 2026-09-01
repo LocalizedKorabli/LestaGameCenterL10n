@@ -1,7 +1,7 @@
 {
     "path": "https://dl.localizedkorabli.org/lateral/lgc/lgc_l10n.7z",
-    "version": "26.7.3",
-    "supported_lgc_version": "26.00.02.1046",
+    "version": "26.9.2",
+    "supported_lgc_version": "26.01.00.1205",
     "supported_languages": [
         {
             "id": "zh_cn",
@@ -22,10 +22,6 @@
         {
             "id": "de",
             "name": "Deutsch"
-        },
-        {
-            "id": "es",
-            "name": "Español"
         },
         {
             "id": "ja",
