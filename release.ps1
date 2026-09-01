@@ -75,7 +75,7 @@ try {
     if ($hasChanges) {
         Write-Host "[WARN] Found uncommitted changes. Committing and pushing..." -ForegroundColor Yellow
         git add .
-        git commit -m "chore: bump version to $tagName"
+        git commit -m "chore: bump version to $tagName [skip ci]"
         
         Write-Host "[INFO] Pushing commits to remote repository..." -ForegroundColor Cyan
         git push origin (git branch --show-current)
